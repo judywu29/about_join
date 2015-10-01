@@ -139,10 +139,10 @@ Eager_load is using one query (with left join) to get them all.
 
 User.eager_load(:cards).merge(Card.hello_card)
 
-  SQL (1.2ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, "cards"."id" 
-  AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 FROM "users" 
-  LEFT OUTER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
-=> [#<User:0x007faabf1d1ca0 id: 1, name: "jeff", created_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00, updated_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00>]
+  	SQL (1.2ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, "cards"."id" 
+  	AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 FROM "users" 
+  	LEFT OUTER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
+	=> [#<User:0x007faabf1d1ca0 id: 1, name: "jeff", created_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00, updated_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00>]
 
 
 preload:
