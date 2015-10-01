@@ -21,28 +21,30 @@ each Card if it has.
 	  belongs_to :user
 	end
 
-  def index
-    @users = User.all
-  end
+  	def index
+    	@users = User.all
+  	end
   
-  User Load (0.7ms)  SELECT "users".* FROM "users"
-  Card Load (0.7ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" = ?  [["user_id", 1]]
-  Card Load (0.1ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" = ?  [["user_id", 2]]
+  	User Load (0.7ms)  SELECT "users".* FROM "users"
+  	Card Load (0.7ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" = ?  [["user_id", 1]]
+  	Card Load (0.1ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" = ?  [["user_id", 2]]
   
- This can all be avoided by changing the first line in the method to:
+This can all be avoided by changing the first line in the method to:
 	@users = User.includes(:cards).all
+
 This tells ActiveRecord to retrieve the corresponding Card records from the database immediately after the initial request for all users, 
 thereby reducing the number of database requests to just 2.
 
 Now we actually can see 2 queries: 
 
-  User Load (1.2ms)  SELECT "users".* FROM "users"
-  Card Load (0.7ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" IN (1, 2)
+  	User Load (1.2ms)  SELECT "users".* FROM "users"
+  	Card Load (0.7ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" IN (1, 2)
   
 joins
 =================
 
 If we joins the table, then it’s one query with an INNER JOIN:
+
 	 SQL (1.2ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, 
 	 "cards"."id" AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 
 	 FROM "users" INNER JOIN "cards" ON "cards"."user_id" = "users"."id"
@@ -53,6 +55,7 @@ With Conditions
 =================
 
 From Rails guild: 
+
 	When we specify conditions on the eager loaded associations just like joins, the recommended way is to use joins instead.
 	However if you must do this, you may use where as you would normally.
 
@@ -72,6 +75,7 @@ one using the INNER JOIN function instead:
 		
 If we still wanna just 1 query and also the card records under the condition, we still need to use includes. 
 We can complete it like: 
+
 	 @users = User.joins(:cards).where(cards: {phrase: 'hello'}).includes(:cards)
 	 SQL (0.3ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, "cards"."id" 
 	 AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 FROM "users" 
@@ -81,6 +85,7 @@ We can complete it like:
 There's another thing: 
 
 Using where like this will only work when you pass it a Hash. For SQL-fragments you need use references to force joined tables:
+
 	[21] pry(main)> User.includes(:cards).where("cards.phrase = 'hello'").references(:cards)
 	
   	SQL (0.7ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, "cards"."id" 
@@ -114,9 +119,11 @@ This is the explaination from the Rails API:
 	This is mainly intended for sharing common conditions between multiple associations.
 	
 If I define a scope in Card model: 
+
 	scope :hello_card, ->{ where phrase: 'hello' }
 	
 Then I can use it in merge, instead of using the where statement: It's quite clean. 
+
 	@users = User.joins(:cards).merge(Card.hello_card)
 	
 	SELECT "users".* FROM "users" INNER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
@@ -131,6 +138,7 @@ eager_load:
 Eager_load is using one query (with left join) to get them all.
 
 User.eager_load(:cards).merge(Card.hello_card)
+
   SQL (1.2ms)  SELECT "users"."id" AS t0_r0, "users"."name" AS t0_r1, "users"."created_at" AS t0_r2, "users"."updated_at" AS t0_r3, "cards"."id" 
   AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 FROM "users" 
   LEFT OUTER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
@@ -155,6 +163,7 @@ If we use the condition on preload: it causes error:
 
 If we need only users who have 'hello' card but also eager load the cards, we can use the includes. 
 But If we need only users who have 'hello' card but also eager load all of the cards, we can use preload: 
+
  	@users = User.joins(:cards).where(cards: {phrase: 'hello'}).preload(:cards)
     User Load (0.2ms)  SELECT "users".* FROM "users" INNER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
     Card Load (0.3ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" IN (1)
