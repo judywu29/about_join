@@ -1,5 +1,6 @@
 class Card < ActiveRecord::Base
-  belongs_to :user
-  
-  scope :hello_card, ->{ where phrase: 'hello' }
+    has_many :user_cards
+    has_many :users, through: :user_cards
+
+  scope :hello_card, ->{ where(phrase: 'hello') }
 end

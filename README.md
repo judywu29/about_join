@@ -82,6 +82,13 @@ We can complete it like:
 	 INNER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
 
 
+But when the table of the cards is too big, using joins like this would be quite slow, we can add a joint table to improve: 
+	 cards = Card.hello_card
+     @users = User.joins(:user_cards).merge(UserCard.with_cards(cards))
+     
+	  User Load (2.5ms)  SELECT "users".* FROM "users" INNER JOIN "user_cards" ON "user_cards"."user_id" = "users"."id" WHERE 
+	  "user_cards"."card_id" IN (SELECT "cards"."id" FROM "cards" WHERE "cards"."phrase" = ?)  [["phrase", "hello"]]
+	  
 There's another thing: 
 
 Using where like this will only work when you pass it a Hash. For SQL-fragments you need use references to force joined tables:
@@ -92,6 +99,7 @@ Using where like this will only work when you pass it a Hash. For SQL-fragments 
   	AS t1_r0, "cards"."phrase" AS t1_r1, "cards"."user_id" AS t1_r2, "cards"."created_at" AS t1_r3, "cards"."updated_at" AS t1_r4 FROM "users" 
   	LEFT OUTER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE (cards.phrase = 'hello')
 	=> [#<User:0x007faabf033df8 id: 1, name: "jeff", created_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00, updated_at: Thu, 01 Oct 2015 06:18:18 UTC +00:00>]
+
 
 
 merge:
@@ -168,4 +176,24 @@ But If we need only users who have 'hello' card but also eager load all of the c
     User Load (0.2ms)  SELECT "users".* FROM "users" INNER JOIN "cards" ON "cards"."user_id" = "users"."id" WHERE "cards"."phrase" = ?  [["phrase", "hello"]]
     Card Load (0.3ms)  SELECT "cards".* FROM "cards" WHERE "cards"."user_id" IN (1)
   
-  
+ALL IN ALL
+=================
+ 	#eager loading all associated cards: 
+    User.joins(:cards).includes(:cards).all
+    
+    #use joins, return users who have the phrase with 'hello'
+    User.joins(:cards).where(cards: {phrase: 'hello'})
+
+    #use joins, return users who have the phrase with 'hello' and also eager loading
+    #all cards
+    User.joins(:cards).where(cards: {phrase: 'hello'}).preload(:cards)
+    
+    #use merge, return users who have the phrase with 'hello' and also 
+    #eager loading associated hello cards
+    User.joins(:cards).merge(Card.hello_card).includes(:cards)
+    
+    #user third model: use IN 
+    #return users who have the phrase with 'hello' and also 
+    #eager loading associated hello cards
+    cards = Card.hello_card
+    User.joins(:user_cards).merge(UserCard.with_cards(Card.hello_card))

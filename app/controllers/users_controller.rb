@@ -4,10 +4,7 @@ class UsersController < ApplicationController
   # GET /users
   # GET /users.json
   def index
-    # @users = User.joins(:cards).includes(:cards).all
-    # @users = User.joins(:cards).where(cards: {phrase: 'hello'})
-    # @users = User.joins(:cards).where(cards: {phrase: 'hello'}).includes(:cards)
-    @users = User.joins(:cards).where(cards: {phrase: 'hello'}).preload(:cards)
+    @users = User.all
   end
 
   # GET /users/1
